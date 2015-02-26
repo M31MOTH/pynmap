@@ -8,6 +8,13 @@ class ip():
 		self.initialize_variable()
 
 		self.multithread(self.ipaddr,self.portrange)
+		if open_ports:
+			print("\n[+] %s Open Ports found!" % len(open_ports))
+			print("[+] Do you want to banner grab?")
+			bg = raw_input("Enter y or n : ")
+			if bg.lower() == 'y':
+				self.bannergrab(self.ipaddr,open_ports)
+			else: pass
 		
 	def initialize_variable(self):
 		# This function is for initializing the necessary command arguments and automate default values when one is empty
@@ -15,6 +22,9 @@ class ip():
 		# As for port range, I think it's just necessary to scan from port 20 to 1024
 		
 		# Generate a list and assign it to self.portrange
+		global open_ports
+		open_ports = []
+		# to record the open ports for the purpose of banner grabbing
 
 		if option.target:
 			self.ipaddr = option.target
@@ -23,9 +33,12 @@ class ip():
 			self.ipaddr = '127.0.0.1'
 
 		if option.portrange:
-			self.highrange = int(option.portrange.split('-')[1])
-			self.lowrange = int(option.portrange.split('-')[0])
-			self.portrange = [i for i in range(self.lowrange,(self.highrange+1))]
+			if option.portrange != 'a':
+				self.highrange = int(option.portrange.split('-')[1])
+				self.lowrange = int(option.portrange.split('-')[0])
+				self.portrange = [i for i in range(self.lowrange,(self.highrange+1))]
+			elif option.portrange == 'a':
+				self.portrange = [i for i in range(1,5000)]
 
 		elif not option.portrange:
 			print("\n[!] --portrange argument is not supplied, default value (20-1024) is taken\n")
@@ -43,8 +56,10 @@ class ip():
 		s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 		status = s.connect_ex((ipaddr,port))
 		if (status == 0):
-			print "[+] =[%s]= Port Open" % port
+			print "[+] ~[%s]~ Port Open" % port
+			open_ports.append(port)
 		else:
+			# print("[+] Port Closed")
 			pass
 
 	def multithread(self,ipaddr,ports):
@@ -56,11 +71,15 @@ class ip():
 			t.start()
 
 	def bannergrab(self,ipaddr,port):
-		s = socket.socket()
-		s.connect_ex((ipaddr,port))
-		s.send('hello')
-		response = s.recv(1024)
-		print "[Banner Information]\n%s" % response
+		for i in port:
+			try:
+				s = socket.socket()
+				s.connect((ipaddr,i))
+				s.send('hello')
+				response = s.recv(1024)
+				print "[Banner Information PORT=%s ]\n%s" % (i,response)
+			except:
+				print "[!] Cannot Grab Banner Information PORT=%s" % (i)
 
 def parseArgs():
 
@@ -70,7 +89,7 @@ def parseArgs():
 	help="IP Address to scan within quote",metavar='"127.0.0.1"')
 	
 	parser.add_option("-p","--port range",dest="portrange",
-	help="Port Range to scan separated with -",metavar="5-300")
+	help="Port Range to scan separated with - or 'a' for all ports",metavar="20-1024")
 
 	return parser
 
@@ -81,12 +100,6 @@ def main():
 	(option, args) = parser.parse_args()
 	# Just assign the class function to do the rest
 	app = ip()
-#	if option.target != None:
-#		app = ip(option.target)
-#
-#	elif option.target == None:
-#		print "[+] Using 'LocalHost' as default target"
-#		app = ip('127.0.0.1')
 
 if __name__ == '__main__':
 	main()
