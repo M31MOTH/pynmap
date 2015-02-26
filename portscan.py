@@ -14,7 +14,6 @@ class ip():
 			print("[+] Do you want to banner grab?")
 			bg = 'y'#raw_input("Enter y or n : ")
 			if bg.lower() == 'y':
-				type(open_ports)
 				self.multithread('bannergrab',self.ipaddr,open_ports)
 			else: pass
 		
