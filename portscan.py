@@ -7,13 +7,15 @@ class ip():
 	def __init__(self):
 		self.initialize_variable()
 
-		self.multithread(self.ipaddr,self.portrange)
+		self.multithread('portscan',self.ipaddr,self.portrange)
+
 		if open_ports:
 			print("\n[+] %s Open Ports found!" % len(open_ports))
 			print("[+] Do you want to banner grab?")
-			bg = raw_input("Enter y or n : ")
+			bg = 'y'#raw_input("Enter y or n : ")
 			if bg.lower() == 'y':
-				self.bannergrab(self.ipaddr,open_ports)
+				type(open_ports)
+				self.multithread('bannergrab',self.ipaddr,open_ports)
 			else: pass
 		
 	def initialize_variable(self):
@@ -62,24 +64,41 @@ class ip():
 			# print("[+] Port Closed")
 			pass
 
-	def multithread(self,ipaddr,ports):
-		# Handles port scanning operation with multi-threading
-		threads = []
-		for i in ports:
-			t = threading.Thread(target=self.scan,args=(ipaddr,i,))
-			threads.append(t)
-			t.start()
+	def multithread(self,operation,ipaddr,ports):
+		if operation == 'portscan':
+			# Handles port scanning operation with multi-threading
+			# If operation is portscanning, then ports argument is (List)
+			threads = []
+			for i in ports:
+				t = threading.Thread(target=self.scan,args=(ipaddr,i,))
+				threads.append(t)
+				t.start()
+
+		elif operation == 'bannergrab':
+			# Handles bannergrabbing operation, since trying one after one is not beneficial
+			# because some ports just do not return anything, and we can't just wait forever
+			# to print the response.
+
+			threads = []
+			for i in ports:
+				t = threading.Thread(target=self.bannergrab,args=(ipaddr,i))
+				threads.append(t)
+				t.start()
 
 	def bannergrab(self,ipaddr,port):
-		for i in port:
-			try:
-				s = socket.socket()
-				s.connect((ipaddr,i))
-				s.send('hello')
-				response = s.recv(1024)
-				print "[Banner Information PORT=%s ]\n%s" % (i,response)
-			except:
-				print "[!] Cannot Grab Banner Information PORT=%s" % (i)
+		# ipaddr variable = STR
+		# port variable = INT
+		try:
+			s = socket.socket()
+			s.connect((ipaddr,port))
+			s.send('hello')
+			response = s.recv(64)
+			if response:
+				print("[Banner Information PORT=%s ]\n%s" % (port,response))
+			else:
+				print("[!] Cannot Grab Banner Information PORT=%s" % (port))
+		except:
+			print("[!] Cannot Grab Banner Information PORT=%s" % (port))
 
 def parseArgs():
 
