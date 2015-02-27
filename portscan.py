@@ -2,6 +2,12 @@ import threading
 import socket
 from optparse import OptionParser
 
+# Processing
+#    Main -> Argparse -> IP() -> Initalize_variable() -> multithreading
+#                                                         |          |
+#                                                         V          V
+#                                                 port scanning    banner grabbing
+
 class ip():
 
 	def __init__(self):
